@@ -23,7 +23,7 @@ class Task(Base):
     desc = Column(String)
     todo_id = Column(Integer, ForeignKey('todos.id'), nullable=False)
 
-    user = relationship('User')
+    user = relationship('Todo')
 
 
 engine = create_engine('sqlite:///todo.db')

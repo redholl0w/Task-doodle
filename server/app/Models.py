@@ -18,7 +18,7 @@ class Task(Base):
     __tablename__ = 'tasks'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    name = Column(String, unique=True, nullable=False)
     done = Column(Boolean, default=False)
     desc = Column(String)
     todo_id = Column(Integer, ForeignKey('todos.id'), nullable=False)

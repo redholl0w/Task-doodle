@@ -1,7 +1,7 @@
 from flask_restful import Resource
 from . import Models as model
 from flask import request, abort
-   # import session, Task, Todo
+
 import sqlalchemy
 
 
@@ -15,8 +15,10 @@ class Todo(Resource):
         return ret
 
     def put(self):
+        js = request.get_json()
+
         try:
-            td = model.Todo(name=request.args.get('name'), desc=request.args.get('desc'))
+            td = model.Todo(name=js.get('name'), desc=js.get('desc'))
             model.session.add(td)
             model.session.commit()
             return 'Ok', 200
@@ -29,17 +31,19 @@ class Todo(Resource):
 
     def post(self):
         js = request.get_json()
-        print(js['name'])
-        todo = model.session.query(model.Todo).filter_by(name=request.args.get('old_name')).first()
+
+        todo = model.session.query(model.Todo).filter_by(name=js['old_name']).first()
         if todo is None:
             abort(404)
-        todo.name = request.args.get('new_name')
-        todo.desc = request.args.get('new_desc', todo.desc)
+        todo.name = js['new_name']
+        todo.desc = js.get('new_desc', todo.desc)
         model.session.commit()
         return 'Ok', 200
 
     def delete(self):
-        model.session.query(model.Todo).filter(model.Todo.name == request.args.get('name')).\
+        js = request.get_json()
+
+        model.session.query(model.Todo).filter(model.Todo.name == js.get('name')).\
             delete(synchronize_session=False)
         model.session.commit()
         return 'Ok', 200
@@ -47,14 +51,6 @@ class Todo(Resource):
 
 class Task(Resource):
 
-    def get(self):
-        q = model.session.query(model.Task)
-
-        ret = []
-        for r in q:
-            todo = model.session.query(model.Todo).filter_by(id=r.todo_id).first()
-            ret.append({'name': r.name, 'desc': r.desc, 'done': r.done, 'todo': todo.name})
-        return ret
 
     def get(self, todo_name):
         r = model.session.query(model.Todo).filter_by(name=todo_name).first()
@@ -67,28 +63,31 @@ class Task(Resource):
         return ret
 
     def put(self, todo_name):
+        js = request.get_json()
         todo = model.session.query(model.Todo).filter_by(name=todo_name).first()
         if todo is None:
             abort(404)
-        task = model.Task(name=request.args.get('name'), desc=request.args.get('desc'), done=False, todo_id=todo.id)
+        task = model.Task(name=js['name'], desc=js.get('desc'), done=False, todo_id=todo.id)
         model.session.add(task)
         model.session.commit()
         return 'Ok', 200
 
     def post(self, todo_name):
+        js = request.get_json()
         todo = model.session.query(model.Todo).filter_by(name=todo_name).first()
         if todo is None:
             abort(404)
-        task = model.session.query(model.Task).filter_by(todo_id=todo.id, name=request.args.get('name')).first()
+        task = model.session.query(model.Task).filter_by(todo_id=todo.id, name=js['name']).first()
         task.done = not task.done
         model.session.commit()
         return 'Ok', 200
 
     def delete(self, todo_name):
+        js = request.get_json()
         todo = model.session.query(model.Todo).filter_by(name=todo_name).first()
         if todo is None:
             abort(404)
-        model.session.query(model.Task).filter(model.Task.name == request.args.get('name'),
+        model.session.query(model.Task).filter(model.Task.name == js['name'],
                                                model.Task.todo_id == todo.id).delete(synchronize_session=False)
         model.session.commit()
         return 'Ok', 200

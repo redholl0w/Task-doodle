@@ -51,7 +51,6 @@ class Todo(Resource):
 
 class Task(Resource):
 
-
     def get(self, todo_name):
         r = model.session.query(model.Todo).filter_by(name=todo_name).first()
         if r is None:
